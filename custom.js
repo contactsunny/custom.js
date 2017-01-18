@@ -43,3 +43,69 @@ function populateDropDown(dropDownId, options) {
         }));
     });
 }
+
+function sendErrorResponse(message) {
+
+    return {
+        error: {
+            message: message
+        }
+    };
+}
+
+function getDefaultHeaders() {
+    return {
+        Authorization: getCookie('authToken')
+    };
+}
+
+function callApi(options) {
+
+    var method = 'GET',
+        data = {},
+        headers = {}
+        ;
+
+    var requiredFields = [
+        'requestUrl'
+    ];
+
+    var promise = new Promise(
+        function(resolve, reject) {
+            requiredFields.forEach(function(requiredField) {
+                if(!(requiredField in options)) {
+                    reject(sendErrorResponse(requiredField + ' is required!'));
+                }
+            });
+
+            if('method' in options) {
+                method = options.method;
+            }
+            
+            if(!('includeDefaultHeaders' in options)) {
+                headers = getDefaultHeaders();
+            } else if(options.includeDefaultHeaders == true) {
+                headers = getDefaultHeaders();
+            }
+
+            if('data' in options) {
+                data = options.data;
+            }
+
+            $.ajax({
+                url: options.requestUrl,
+                method: method,
+                data: data,
+                headers: headers,
+                success: function(response) {
+                    resolve(response);
+                },
+                error: function(error) {
+                    reject(error.errorJSON);
+                }
+            });
+        }
+    );
+
+    return promise;
+}
